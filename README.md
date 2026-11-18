@@ -1,4 +1,3 @@
-# calculadora-custo-funcionario
 # 💼 Calculadora de Custo de Funcionário & Salário Líquido (2026)
 
 Simulador web desenvolvido para calcular o **salário líquido do colaborador** e o **custo mensal direto para a empresa** conforme o regime tributário, aplicando as tabelas e regras trabalhistas vigentes no Brasil em **2026**.

@@ -10,7 +10,7 @@ const TABELAS_2026 = {
     ],
     irrf: {
         deducaoPorDependente: 189.59,
-        descontoSimplificado: 607.20, // 25% da faixa inicial (R$ 2.428,80)
+        descontoSimplificado: 607.20,
         limiteIsencaoTotal: 5000.00,
         limiteTransicao: 7350.00,
         fatorFixoTransicao: 978.62,
@@ -25,19 +25,46 @@ const TABELAS_2026 = {
     },
     encargosEmpresa: {
         fgts: 0.08,
-        simples: 0.00,          // Anexos I, II, III e V (CPP no DAS)
-        simples_anexo4: 0.22,   // 20% INSS Patronal + 2% RAT médio
-        lucro_presumido: 0.278  // 20% INSS Patronal + 2% RAT médio + 5.8% Terceiros
+        regimes: {
+            simples: {
+                aliquotaPatronal: 0.00,
+                labelEncargos: "",
+                nota: "No Simples Nacional (exceto Anexo IV), o INSS patronal e o RAT já estão incluídos no DAS e não há contribuição a terceiros."
+            },
+            simples_anexo4: {
+                aliquotaPatronal: 0.22, // 20% INSS Patronal + 2% RAT médio
+                labelEncargos: "INSS Patronal + RAT (22%)",
+                nota: "No Simples Nacional (Anexo IV), a empresa recolhe INSS Patronal (20%) e RAT sobre a folha, mas permanece isenta da contribuição a Terceiros (Sistema S)."
+            },
+            lucro_presumido: {
+                aliquotaPatronal: 0.278, // 20% INSS + 2% RAT + 5.8% Terceiros
+                labelEncargos: "Patronal + RAT + Terceiros (27,8%)",
+                nota: "No Lucro Presumido / Real, além do FGTS (8%), incidem INSS Patronal (20%), RAT (média de 2%) e Terceiros / Sistema S (5,8%) sobre a folha e provisões."
+            }
+        }
     }
 };
 
-/**
- * Calcula o desconto progressivo do INSS (Tabela 2026)
- */
+const formatadorMoeda = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+});
+
+function formatarMoeda(valor, negativo = false) {
+    const formatado = formatadorMoeda.format(Math.abs(valor));
+    return negativo && valor > 0 ? `-${formatado}` : (negativo ? `-R$ 0,00` : formatado);
+}
+
+function formatarPercentual(valor, salarioBruto, negativo = false) {
+    if (!salarioBruto || salarioBruto <= 0) return "-";
+    const perc = (valor / salarioBruto) * 100;
+    const texto = `${perc.toFixed(1).replace(".", ",")}%`;
+    return negativo && valor > 0 ? `-${texto}` : texto;
+}
+
 function calcularINSS(salarioBruto) {
     const faixas = TABELAS_2026.inss;
     const tetoMaximo = faixas[faixas.length - 1].limite;
-
     let inssTotal = 0;
     let salarioBase = Math.min(salarioBruto, tetoMaximo);
     let limiteAnterior = 0;
@@ -51,101 +78,120 @@ function calcularINSS(salarioBruto) {
             break;
         }
     }
-
     return Number(inssTotal.toFixed(2));
 }
 
-/**
- * Calcula o imposto bruto pela tabela progressiva tradicional
- */
 function calcularImpostoTabelaProgressiva(baseCalculo) {
     if (baseCalculo <= 0) return 0;
-
     const faixa = TABELAS_2026.irrf.faixasProgressivas.find(f => baseCalculo <= f.limite);
-    const imposto = (baseCalculo * faixa.aliquota) - faixa.deducao;
-    return Math.max(0, imposto);
+    return Math.max(0, (baseCalculo * faixa.aliquota) - faixa.deducao);
 }
 
-/**
- * Calcula o IRRF considerando as regras de 2026:
- * 1. Isenção total para rendimentos até R$ 5.000,00
- * 2. Redutor gradual para rendimentos entre R$ 5.000,01 e R$ 7.350,00
- * 3. Comparação entre Dedução Legal e Desconto Simplificado
- */
 function calcularIRRF(salarioBruto, inss, dependentes) {
     const cfg = TABELAS_2026.irrf;
+    if (salarioBruto <= cfg.limiteIsencaoTotal) return 0.00;
 
-    // Regra 1: Isenção total até R$ 5.000,00
-    if (salarioBruto <= cfg.limiteIsencaoTotal) {
-        return 0.00;
-    }
-
-    // Cálculo das bases (Legal vs. Simplificada)
     const deducaoLegal = inss + (dependentes * cfg.deducaoPorDependente);
     const baseLegal = Math.max(0, salarioBruto - deducaoLegal);
     const baseSimplificada = Math.max(0, salarioBruto - cfg.descontoSimplificado);
 
-    // Apura o menor imposto pela tabela progressiva tradicional
     const impostoLegal = calcularImpostoTabelaProgressiva(baseLegal);
     const impostoSimplificado = calcularImpostoTabelaProgressiva(baseSimplificada);
     const impostoApurado = Math.min(impostoLegal, impostoSimplificado);
 
-    // Regra 2: Faixa de transição (R$ 5.000,01 até R$ 7.350,00)
     if (salarioBruto <= cfg.limiteTransicao) {
-        const redutor = Math.max(
-            0,
-            cfg.fatorFixoTransicao - (cfg.aliquotaReducaoTransicao * salarioBruto)
-        );
-        const impostoFinal = Math.max(0, impostoApurado - redutor);
-        return Number(impostoFinal.toFixed(2));
+        const redutor = Math.max(0, cfg.fatorFixoTransicao - (cfg.aliquotaReducaoTransicao * salarioBruto));
+        return Number(Math.max(0, impostoApurado - redutor).toFixed(2));
     }
 
-    // Regra 3: Acima de R$ 7.350,00 (sem redutor adicional)
     return Number(impostoApurado.toFixed(2));
 }
 
-/**
- * Calcula o custo mensal direto da empresa por regime tributário
- */
-function calcularCustoEmpresa(salarioBruto, regime) {
-    const encargos = TABELAS_2026.encargosEmpresa;
-    const valorFGTS = salarioBruto * encargos.fgts;
-    const aliquotaPatronal = encargos[regime] ?? 0;
-    const valorPatronal = salarioBruto * aliquotaPatronal;
+function atualizarCalculadora() {
+    const salarioBruto = Math.max(0, parseFloat(document.getElementById("salario_bruto").value) || 0);
+    const dependentes = Math.max(0, parseInt(document.getElementById("dependentes").value, 10) || 0);
+    const regimeKey = document.getElementById("regime_empresa").value;
+    const configRegime = TABELAS_2026.encargosEmpresa.regimes[regimeKey];
 
-    const custoTotal = salarioBruto + valorFGTS + valorPatronal;
-    return Number(custoTotal.toFixed(2));
+    // Atualiza nota explicativa do regime
+    document.getElementById("nota_regime").textContent = configRegime.nota;
+
+    // 1. Cálculos do Funcionário
+    const valorINSS = calcularINSS(salarioBruto);
+    const valorIRRF = calcularIRRF(salarioBruto, valorINSS, dependentes);
+    const salarioLiquido = Number(Math.max(0, salarioBruto - valorINSS - valorIRRF).toFixed(2));
+
+    // 2. Cálculos da Empresa (Folha + Provisões)
+    const aliquotaFGTS = TABELAS_2026.encargosEmpresa.fgts;
+    const aliquotaPatronal = configRegime.aliquotaPatronal;
+
+    const fgtsMensal = Number((salarioBruto * aliquotaFGTS).toFixed(2));
+    const encargosFolha = Number((salarioBruto * aliquotaPatronal).toFixed(2));
+
+    // Provisões mensais (1/12 de 13º e 1/12 de Férias + 1/3 constitucional)
+    const provisao13 = Number((salarioBruto / 12).toFixed(2));
+    const provisaoFerias = Number(((salarioBruto / 12) * (4 / 3)).toFixed(2));
+
+    // Encargos incidentes sobre as provisões (FGTS + Patronal do regime)
+    const baseProvisoes = provisao13 + provisaoFerias;
+    const encargosProvisoes = Number((baseProvisoes * (aliquotaFGTS + aliquotaPatronal)).toFixed(2));
+
+    const custoTotalEmpresa = Number((
+        salarioBruto + fgtsMensal + encargosFolha + provisao13 + provisaoFerias + encargosProvisoes
+    ).toFixed(2));
+
+    // 3. Atualiza Cards de Destaque
+    document.getElementById("res_custo_empresa").textContent = formatarMoeda(custoTotalEmpresa);
+    document.getElementById("res_salario_liquido").textContent = formatarMoeda(salarioLiquido);
+
+    // 4. Atualiza Tabela - Funcionário
+    document.getElementById("tab_func_bruto").textContent = formatarMoeda(salarioBruto);
+    document.getElementById("perc_func_bruto").textContent = formatarPercentual(salarioBruto, salarioBruto);
+
+    document.getElementById("tab_func_inss").textContent = formatarMoeda(valorINSS, true);
+    document.getElementById("perc_func_inss").textContent = formatarPercentual(valorINSS, salarioBruto, true);
+
+    document.getElementById("tab_func_irrf").textContent = formatarMoeda(valorIRRF, true);
+    document.getElementById("perc_func_irrf").textContent = formatarPercentual(valorIRRF, salarioBruto, true);
+
+    document.getElementById("tab_func_liquido").textContent = formatarMoeda(salarioLiquido);
+    document.getElementById("perc_func_liquido").textContent = formatarPercentual(salarioLiquido, salarioBruto);
+
+    // 5. Atualiza Tabela - Empresa
+    document.getElementById("tab_emp_bruto").textContent = formatarMoeda(salarioBruto);
+    document.getElementById("perc_emp_bruto").textContent = formatarPercentual(salarioBruto, salarioBruto);
+
+    document.getElementById("tab_emp_fgts").textContent = formatarMoeda(fgtsMensal);
+    document.getElementById("perc_emp_fgts").textContent = formatarPercentual(fgtsMensal, salarioBruto);
+
+    const linhaEncargosFolha = document.getElementById("linha_encargos_folha");
+    if (aliquotaPatronal > 0) {
+        linhaEncargosFolha.style.display = "grid";
+        document.getElementById("label_encargos_folha").textContent = configRegime.labelEncargos;
+        document.getElementById("tab_emp_encargos_folha").textContent = formatarMoeda(encargosFolha);
+        document.getElementById("perc_emp_encargos_folha").textContent = formatarPercentual(encargosFolha, salarioBruto);
+    } else {
+        linhaEncargosFolha.style.display = "none";
+    }
+
+    document.getElementById("tab_emp_prov_13").textContent = formatarMoeda(provisao13);
+    document.getElementById("perc_emp_prov_13").textContent = formatarPercentual(provisao13, salarioBruto);
+
+    document.getElementById("tab_emp_prov_ferias").textContent = formatarMoeda(provisaoFerias);
+    document.getElementById("perc_emp_prov_ferias").textContent = formatarPercentual(provisaoFerias, salarioBruto);
+
+    document.getElementById("tab_emp_encargos_prov").textContent = formatarMoeda(encargosProvisoes);
+    document.getElementById("perc_emp_encargos_prov").textContent = formatarPercentual(encargosProvisoes, salarioBruto);
+
+    document.getElementById("tab_emp_total").textContent = formatarMoeda(custoTotalEmpresa);
+    document.getElementById("perc_emp_total").textContent = formatarPercentual(custoTotalEmpresa, salarioBruto);
 }
 
-/**
- * Controlador principal da interface (DOM)
- */
-function inicializarCalculadora() {
-    const formulario = document.getElementById("form-calculadora");
-    if (!formulario) return;
-
-    formulario.addEventListener("submit", (evento) => {
-        evento.preventDefault();
-
-        const salarioBruto = parseFloat(document.getElementById("salario_bruto").value) || 0;
-        const dependentes = parseInt(document.getElementById("dependentes").value, 10) || 0;
-        const regime = document.getElementById("regime_empresa").value;
-
-        if (salarioBruto < 0 || dependentes < 0) {
-            alert("Por favor, insira valores positivos para salário e dependentes.");
-            return;
-        }
-
-        const valorINSS = calcularINSS(salarioBruto);
-        const valorIRRF = calcularIRRF(salarioBruto, valorINSS, dependentes);
-        const salarioLiquido = Number((salarioBruto - valorINSS - valorIRRF).toFixed(2));
-        const custoEmpresa = calcularCustoEmpresa(salarioBruto, regime);
-
-        document.getElementById("inss").value = valorINSS.toFixed(2);
-        document.getElementById("irrf").value = valorIRRF.toFixed(2);
-        document.getElementById("salario_liquido").value = salarioLiquido.toFixed(2);
-        document.getElementById("custo_empresa").value = custoEmpresa.toFixed(2);
+document.addEventListener("DOMContentLoaded", () => {
+    ["salario_bruto", "regime_empresa", "dependentes"].forEach((id) => {
+        const elemento = document.getElementById(id);
+        elemento.addEventListener("input", atualizarCalculadora);
+        elemento.addEventListener("change", atualizarCalculadora);
     });
-}
-
-document.addEventListener("DOMContentLoaded", inicializarCalculadora);
+    atualizarCalculadora();
+});

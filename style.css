@@ -1,15 +1,14 @@
-/* Reset básico e variáveis de cores */
 :root {
-    --cor-primaria: #1e40af;       /* Azul corporativo */
-    --cor-primaria-hover: #1e3a8a;
-    --cor-fundo: #f1f5f9;          /* Cinza claro suave */
-    --cor-card: #ffffff;
-    --cor-texto: #1e293b;
-    --cor-texto-suave: #64748b;
-    --cor-borda: #cbd5e1;
-    --cor-resultado-bg: #f8fafc;
-    --cor-destaque-liquido: #15803d; /* Verde para salário líquido */
-    --cor-destaque-custo: #b91c1c;   /* Vermelho escuro para custo empresa */
+    --bg-principal: #111618;
+    --bg-card: #1a2023;
+    --bg-input: #22292d;
+    --borda-sutil: #2c353a;
+    --card-verde-bg: #163b2c;
+    --card-verde-borda: #1f523d;
+    --verde-destaque: #34d399;
+    --texto-principal: #f1f5f9;
+    --texto-secundario: #94a3b8;
+    --texto-verde-suave: #a7f3d0;
 }
 
 * {
@@ -20,145 +19,161 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto);
-    line-height: 1.6;
-    padding: 2rem 1rem;
+    background-color: var(--bg-principal);
+    color: var(--texto-principal);
+    line-height: 1.5;
+    padding: 24px 16px 48px;
 }
 
-/* Container principal centralizado */
 .container {
-    max-width: 650px;
+    max-width: 520px;
     margin: 0 auto;
-    background-color: var(--cor-card);
-    padding: 2.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--cor-borda);
-    padding-bottom: 1.25rem;
+/* Cabeçalho */
+.cabecalho h1 {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-bottom: 8px;
 }
 
-h1 {
-    font-size: 1.6rem;
-    color: var(--cor-primaria);
-    margin-bottom: 0.25rem;
-}
-
-header p {
-    color: var(--cor-texto-suave);
+.cabecalho p {
+    color: var(--texto-secundario);
     font-size: 0.95rem;
 }
 
-h2 {
-    font-size: 1.15rem;
-    color: var(--cor-texto);
-    margin-bottom: 1rem;
-    padding-left: 0.5rem;
-    border-left: 4px solid var(--cor-primaria);
+/* Cartões Base */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--borda-sutil);
+    border-radius: 14px;
+    padding: 18px;
 }
 
-/* Agrupamento dos campos */
+.card-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .campo-grupo {
-    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-/* Linha com duas colunas para telas maiores */
-.linha-dupla {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-label {
-    display: block;
+.campo-grupo label {
     font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 0.4rem;
-    color: var(--cor-texto);
+    color: var(--texto-secundario);
+    font-weight: 500;
 }
 
-input[type="text"],
-input[type="number"],
-select {
+.campo-grupo input,
+.campo-grupo select {
     width: 100%;
-    padding: 0.7rem 0.9rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--borda-sutil);
+    border-radius: 10px;
+    padding: 12px 14px;
     font-size: 1rem;
-    border: 1px solid var(--cor-borda);
-    border-radius: 6px;
-    background-color: #ffffff;
-    color: var(--cor-texto);
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-input:focus,
-select:focus {
+    color: var(--texto-principal);
     outline: none;
-    border-color: var(--cor-primaria);
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
+    transition: border-color 0.2s;
 }
 
-/* Botão principal */
-.btn-calcular {
-    width: 100%;
-    padding: 0.9rem;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #ffffff;
-    background-color: var(--cor-primaria);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 0.5rem;
-    transition: background-color 0.2s;
+.campo-grupo input:focus,
+.campo-grupo select:focus {
+    border-color: var(--verde-destaque);
 }
 
-.btn-calcular:hover {
-    background-color: var(--cor-primaria-hover);
+/* Cards de Destaque */
+.cards-destaque {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* Área de Resultados */
-.secao-resultados {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 2px dashed var(--cor-borda);
+.card-verde {
+    background-color: var(--card-verde-bg);
+    border: 1px solid var(--card-verde-borda);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-input[readonly] {
-    background-color: var(--cor-resultado-bg);
-    border-color: #e2e8f0;
-    font-weight: 600;
-    color: var(--cor-texto);
-    cursor: default;
+.card-titulo {
+    font-size: 0.9rem;
+    color: var(--texto-verde-suave);
+    font-weight: 500;
 }
 
-/* Destaques nos totais */
-.destaque-liquido input {
-    color: var(--cor-destaque-liquido);
-    border-color: #bbf7d0;
-    background-color: #f0fdf4;
-    font-size: 1.1rem;
+.card-valor {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--verde-destaque);
+    letter-spacing: -0.02em;
 }
 
-.destaque-custo input {
-    color: var(--cor-destaque-custo);
-    border-color: #fecaca;
-    background-color: #fef2f2;
-    font-size: 1.1rem;
+/* Tabela Detalhada */
+.tabela-header {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 0.85fr;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--borda-sutil);
+    font-size: 0.85rem;
+    color: var(--texto-secundario);
+    font-weight: 500;
 }
 
-/* Responsividade para celulares */
-@media (max-width: 520px) {
-    .container {
-        padding: 1.5rem;
-    }
+.secao-titulo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--verde-destaque);
+    margin: 16px 0 6px;
+}
 
-    .linha-dupla {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
+.espaco-topo {
+    margin-top: 22px;
+}
+
+.tabela-linha {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 0.85fr;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(44, 53, 58, 0.6);
+    font-size: 0.95rem;
+}
+
+.tabela-linha:last-child {
+    border-bottom: none;
+}
+
+.linha-total {
+    font-weight: 700;
+    border-bottom: none;
+    padding-top: 14px;
+}
+
+.col-direita {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Rodapé */
+.rodape-notas {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--texto-secundario);
+    line-height: 1.55;
+    padding: 4px 2px;
 }
