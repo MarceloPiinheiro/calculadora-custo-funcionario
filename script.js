@@ -11,20 +11,19 @@ const $=id=>document.getElementById(id);
 const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const pct=v=>(v*100).toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
 
-// Formata milhares com ponto (5.000) e aceita vírgula para centavos (5.000,50)
+// Aceita apenas números e uma vírgula para centavos (ex: 5000 ou 5000,50)
 function lerSalario(el){
  let v=el.value.replace(/[^\d,]/g,"");
  if(!v){el.value="";return 0;}
  const partes=v.split(",");
- let inteiro=partes[0].replace(/^0+(?=\d)/,"")||"0";
- inteiro=inteiro.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+ const inteiro=partes[0].replace(/^0+(?=\d)/,"")||"0";
  if(partes.length>1){
   const centavos=partes.slice(1).join("").slice(0,2);
   el.value=`${inteiro},${centavos}`;
  }else{
   el.value=inteiro;
  }
- return parseFloat(el.value.replace(/\./g,"").replace(",","."))||0;
+ return parseFloat(el.value.replace(",","."))||0;
 }
 
 function inss(b){let prev=0,t=0;for(const [lim,r] of T.inss){if(b>prev)t+=(Math.min(b,lim)-prev)*r;prev=lim}return t}
@@ -68,5 +67,5 @@ function calc(){
  $("nota").textContent=r.pat?"":"No Simples Nacional (exceto Anexo IV), o INSS patronal e o RAT já estão incluídos no DAS e não há contribuição a terceiros.";
 }
 ["sal","reg","rat","terc","dep"].forEach(id=>$(id).addEventListener("input",calc));
-$("sal").addEventListener("blur",()=>{const b=lerSalario($("sal"));if(b>0)$("sal").value=b.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});});
+$("sal").addEventListener("blur",()=>{const b=lerSalario($("sal"));if(b>0)$("sal").value=b.toFixed(2).replace(".",",");});
 calc();
