@@ -11,6 +11,18 @@ const $=id=>document.getElementById(id);
 const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const pct=v=>(v*100).toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
 
+// Formata o input no padrão brasileiro (com ponto e vírgula) conforme o usuário digita
+function mascaraMoeda(el){
+ const digitos=el.value.replace(/\D/g,"");
+ if(!digitos){
+  el.value="";
+  return 0;
+ }
+ const numero=parseInt(digitos,10)/100;
+ el.value=numero.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+ return numero;
+}
+
 function inss(b){let prev=0,t=0;for(const [lim,r] of T.inss){if(b>prev)t+=(Math.min(b,lim)-prev)*r;prev=lim}return t}
 function irrf(b,i,dep){
  const ded=Math.max(T.simplificado,i+dep*T.dependente);
@@ -24,7 +36,7 @@ function irrf(b,i,dep){
 }
 
 function calc(){
- const b=Math.max(0,parseFloat($("sal").value)||0);
+ const b=mascaraMoeda($("sal"));
  const dep=Math.max(0,parseInt($("dep").value)||0);
  const r=REG[$("reg").value];
  $("wrat").hidden=!r.rat;$("wterc").hidden=!r.terc;
