@@ -1,0 +1,164 @@
+/* Reset básico e variáveis de cores */
+:root {
+    --cor-primaria: #1e40af;       /* Azul corporativo */
+    --cor-primaria-hover: #1e3a8a;
+    --cor-fundo: #f1f5f9;          /* Cinza claro suave */
+    --cor-card: #ffffff;
+    --cor-texto: #1e293b;
+    --cor-texto-suave: #64748b;
+    --cor-borda: #cbd5e1;
+    --cor-resultado-bg: #f8fafc;
+    --cor-destaque-liquido: #15803d; /* Verde para salário líquido */
+    --cor-destaque-custo: #b91c1c;   /* Vermelho escuro para custo empresa */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    line-height: 1.6;
+    padding: 2rem 1rem;
+}
+
+/* Container principal centralizado */
+.container {
+    max-width: 650px;
+    margin: 0 auto;
+    background-color: var(--cor-card);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 1.25rem;
+}
+
+h1 {
+    font-size: 1.6rem;
+    color: var(--cor-primaria);
+    margin-bottom: 0.25rem;
+}
+
+header p {
+    color: var(--cor-texto-suave);
+    font-size: 0.95rem;
+}
+
+h2 {
+    font-size: 1.15rem;
+    color: var(--cor-texto);
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
+    border-left: 4px solid var(--cor-primaria);
+}
+
+/* Agrupamento dos campos */
+.campo-grupo {
+    margin-bottom: 1.25rem;
+}
+
+/* Linha com duas colunas para telas maiores */
+.linha-dupla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--cor-texto);
+}
+
+input[type="text"],
+input[type="number"],
+select {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    font-size: 1rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: var(--cor-texto);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
+}
+
+/* Botão principal */
+.btn-calcular {
+    width: 100%;
+    padding: 0.9rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: var(--cor-primaria);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.btn-calcular:hover {
+    background-color: var(--cor-primaria-hover);
+}
+
+/* Área de Resultados */
+.secao-resultados {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px dashed var(--cor-borda);
+}
+
+input[readonly] {
+    background-color: var(--cor-resultado-bg);
+    border-color: #e2e8f0;
+    font-weight: 600;
+    color: var(--cor-texto);
+    cursor: default;
+}
+
+/* Destaques nos totais */
+.destaque-liquido input {
+    color: var(--cor-destaque-liquido);
+    border-color: #bbf7d0;
+    background-color: #f0fdf4;
+    font-size: 1.1rem;
+}
+
+.destaque-custo input {
+    color: var(--cor-destaque-custo);
+    border-color: #fecaca;
+    background-color: #fef2f2;
+    font-size: 1.1rem;
+}
+
+/* Responsividade para celulares */
+@media (max-width: 520px) {
+    .container {
+        padding: 1.5rem;
+    }
+
+    .linha-dupla {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
